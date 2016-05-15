@@ -1,0 +1,24 @@
+name               : snap-routes-example
+version            : 0.0.1
+cabal-version      : >=1.18
+build-type         : Simple
+license            : MIT
+maintainer         : ajnsit@gmail.com
+stability          : Experimental
+synopsis           : Example of using typesafe URLs for Snap applications.
+description        : Example of using typesafe URLs for Snap applications.
+category           : Network
+author             : Anupam Jain
+data-dir           : ""
+
+source-repository head
+    type     : git
+    location : http://github.com/ajnsit/snap-routes
+
+executable snap-routes-example
+    build-depends      : base
+                       , snap-routes
+                       , text
+    main-is            : Main.hs
+    default-language   : Haskell2010
+    ghc-options        : -Wall
