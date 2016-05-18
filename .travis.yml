@@ -1,56 +1,55 @@
-# From https://github.com/hvr/multi-ghc-travis
-
-# NB: don't set `language: haskell` here
-# language: haskell
-
-# Use Travis CI's docker based install
-# We can't use sudo in the docker environment
-# See - http://docs.travis-ci.com/user/migrating-from-legacy/
+# Use new container infrastructure to enable caching
 sudo: false
 
-cache:
-  directories:
-    - $HOME/.stack
+# Choose a lightweight base image; we provide our own build tools.
+language: c
 
+# GHC depends on GMP. You can add other dependencies here as well.
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+
+# The different configurations we want to test. You could also do things like
+# change flags or use --stack-yaml to point to a different file.
 matrix:
   include:
-    - env: GHCVER=7.10.1
-      addons: {apt: {sources: [hvr-ghc], packages: [libgmp-dev]}}
-    - env: GHCVER=7.10.2
-      addons: {apt: {sources: [hvr-ghc], packages: [libgmp-dev]}}
-    - env: GHCVER=7.10.3
-      addons: {apt: {sources: [hvr-ghc], packages: [libgmp-dev]}}
-    - env: GHCVER=head
-      addons: {apt: {sources: [hvr-ghc], packages: [libgmp-dev]}}
-  allow_failures:
-    - env: GHCVER=head
+  - env: ARGS=""
+    compiler: ": # Default"
+  - env: ARGS="--resolver lts-2"
+    compiler: ": # lts-2"
+  - env: ARGS="--resolver lts-3"
+    compiler: ": # lts-3"
+  - env: ARGS="--resolver lts-4"
+    compiler: ": # lts-4"
+  - env: ARGS="--resolver lts"
+    compiler: ": # lts"
+  - env: ARGS="--resolver nightly"
+    compiler: ": # nightly"
+  - env: ARGS=""
+    compiler: ": # Default osx"
+    os: osx
 
-# Note: the distinction between `before_install` and `install` is not important.
 before_install:
- - mkdir -p ~/.local/bin
- - export PATH=~/.local/bin:$PATH
- - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
- # Removed coveralls for now as it was killing CI build times. Need to figure out how to cache this.
- # - if ! [ -x ~/.local/bin/hpc-coveralls ]; then stack install hpc-coveralls; fi
- - uname -a
- - stack +RTS -N1 -RTS --version
+# Undo the side-effect of using compiler above
+- unset CC
 
-install:
- - stack --no-terminal --skip-ghc-check setup
- - stack --no-terminal --skip-ghc-check build
+# Download and unpack the stack executable
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- if [ `uname` = "Darwin" ];
+  then
+    curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin;
+  else
+    curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
+  fi
 
-script:
- - stack --no-terminal --skip-ghc-check test
+# This line does all of the work: installs GHC if necessary, build the library,
+# executables, and test suites, and runs the test suites. --no-terminal works
+# around some quirks in Travis's terminal implementation.
+script: stack $ARGS --no-terminal --install-ghc test --haddock
 
-after_script:
-  - cat dist/test/*.log
-  # Coverage analysis with coverall.io
-  # - hpc-coveralls simple
-
-# notifications:
-#   webhooks:
-#     urls:
-#       - https://webhooks.gitter.im/e/54082bcac9f71b052848
-#     on_success: always  # options: [always|never|change] default: always
-#     on_failure: always  # options: [always|never|change] default: always
-#     on_start: never     # options: [always|never|change] default: always
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
