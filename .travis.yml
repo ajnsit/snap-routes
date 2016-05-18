@@ -1,0 +1,59 @@
+# From https://github.com/hvr/multi-ghc-travis
+
+# NB: don't set `language: haskell` here
+# language: haskell
+
+# Use Travis CI's docker based install
+# We can't use sudo in the docker environment
+# See - http://docs.travis-ci.com/user/migrating-from-legacy/
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.stack
+
+matrix:
+  include:
+    - env: GHCVER=7.10.1
+      addons: {apt: {sources: [hvr-ghc], packages: [ghc-7.10.1]}}
+    - env: GHCVER=7.10.2
+      addons: {apt: {sources: [hvr-ghc], packages: [ghc-7.10.2, libgmp-dev]}}
+    - env: GHCVER=7.10.3
+      addons: {apt: {sources: [hvr-ghc], packages: [ghc-7.10.3, libgmp-dev]}}
+    - env: GHCVER=head
+      addons: {apt: {sources: [hvr-ghc], packages: [ghc-head, libgmp-dev]}}
+  allow_failures:
+    - env: GHCVER=head
+
+# Note: the distinction between `before_install` and `install` is not important.
+before_install:
+ - export PATH=/opt/ghc/$GHCVER/bin:$PATH
+ - mkdir -p ~/.local/bin
+ - export PATH=~/.local/bin:$PATH
+ - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+ # Removed coveralls for now as it was killing CI build times. Need to figure out how to cache this.
+ # - if ! [ -x ~/.local/bin/hpc-coveralls ]; then stack install hpc-coveralls; fi
+ - uname -a
+ - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+ - ghc --info
+ - stack +RTS -N1 -RTS --version
+
+install:
+ - stack --no-terminal --skip-ghc-check setup
+ - stack --no-terminal --skip-ghc-check build
+
+script:
+ - stack --no-terminal --skip-ghc-check test
+
+after_script:
+  - cat dist/test/*.log
+  # Coverage analysis with coverall.io
+  # - hpc-coveralls simple
+
+# notifications:
+#   webhooks:
+#     urls:
+#       - https://webhooks.gitter.im/e/54082bcac9f71b052848
+#     on_success: always  # options: [always|never|change] default: always
+#     on_failure: always  # options: [always|never|change] default: always
+#     on_start: never     # options: [always|never|change] default: always

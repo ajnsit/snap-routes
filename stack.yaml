@@ -1,5 +1,7 @@
 flags: {}
 packages:
 - '.'
+- examples/hello
+- examples/subsites
 extra-deps: []
 resolver: lts-5.15
