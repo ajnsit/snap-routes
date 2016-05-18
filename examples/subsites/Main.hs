@@ -3,9 +3,8 @@
 module Main where
 
 import Snap.Routes
-
-import Data.Maybe
-
+import Control.Applicative ((<$>))
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 
