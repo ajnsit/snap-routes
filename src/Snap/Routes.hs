@@ -70,6 +70,7 @@ data Env sub master = Env
 
 -- | A `Handler` generates an App from the master datatype
 type RouteHandler sub = forall master m. RenderRoute master => HandlerS m sub master
+type SubrouteHandler sub master = forall m. HandlerS m sub master
 type HandlerS m sub master = MonadSnap m => Env sub master -> App m sub
 
 -- | Generates everything except actual dispatch
