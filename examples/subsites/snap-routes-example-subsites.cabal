@@ -1,4 +1,4 @@
-name               : snap-routes-example
+name               : snap-routes-example-subsites
 version            : 0.0.1
 cabal-version      : >=1.18
 build-type         : Simple
@@ -15,7 +15,7 @@ source-repository head
     type     : git
     location : http://github.com/ajnsit/snap-routes
 
-executable snap-routes-example
+executable snap-routes-example-subsites
     build-depends      : base
                        , snap-routes
                        , text
