@@ -71,7 +71,7 @@ data Env sub master = Env
 -- | A `Handler` generates an App from the master datatype
 type RouteHandler sub = forall master m. RenderRoute master => HandlerS m sub master
 type SubrouteHandler sub master = forall m. HandlerS m sub master
-type HandlerS m sub master = MonadSnap m => Env sub master -> App m sub
+type HandlerS m sub master = Env sub master -> App m sub
 
 -- | Generates everything except actual dispatch
 mkRouteData :: String -> [ResourceTree String] -> Q [Dec]
@@ -99,7 +99,12 @@ mkRouteDispatch typName routes = do
   let typ = parseType typName
   m <- newName "m"
   disp <- mkRouteDispatchClause routes
-  return [InstanceD []
+#if MIN_VERSION_template_haskell(2,11,0)
+  let inst = InstanceD Nothing
+#else
+  let inst = InstanceD
+#endif
+  return [inst []
           (ConT ''Routable `AppT` VarT m `AppT` typ `AppT` typ)
           [FunD (mkName "dispatcher") [disp]]]
 
@@ -116,7 +121,12 @@ mkRouteSubDispatch typName constraint routes = do
   className <- lookupTypeName constraint
   -- Check if this is a classname or a type
   let contract = maybe (error $ "Unknown typeclass " ++ show constraint) (getContract master) className
-  return [InstanceD [contract]
+#if MIN_VERSION_template_haskell(2,11,0)
+  let inst = InstanceD Nothing
+#else
+  let inst = InstanceD
+#endif
+  return [inst [contract]
           (ConT ''Routable `AppT` VarT m `AppT` typ `AppT` VarT master)
           [FunD (mkName "dispatcher") [disp]]]
   where
@@ -247,8 +257,7 @@ app405 _env _rd = pass
 -- Currently all this does is populate the route into RequestData
 -- But it may do more in the future
 runHandler
-    :: MonadSnap m
-    => HandlerS m sub master
+    :: HandlerS m sub master
     -> Env sub master
     -> Maybe (Route sub)
     -> App m sub
@@ -256,8 +265,7 @@ runHandler h env rout reqdata = h env reqdata{currentRoute=rout}
 
 -- Run a route subsite handler function
 subDispatcher
-    :: MonadSnap m
-    => Routable m sub master
+    :: Routable m sub master
     => (HandlerS m sub master -> Env sub master -> Maybe (Route sub) -> App m sub)
     -> (master -> sub)
     -> (Route sub -> Route master)

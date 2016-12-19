@@ -92,4 +92,3 @@ typeOgv = "video/ogg"
 
 typeOctet :: ByteString
 typeOctet = "application/octet-stream"
-

@@ -20,5 +20,6 @@ executable snap-routes-example-subsites
                        , snap-routes
                        , text
     main-is            : Main.hs
+    other-modules      : HelloSub
     default-language   : Haskell2010
     ghc-options        : -Wall
