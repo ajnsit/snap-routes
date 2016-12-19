@@ -1,0 +1,7 @@
+flags: {}
+packages:
+- '.'
+- examples/hello
+- examples/subsites
+extra-deps: []
+resolver: lts-6.27
