@@ -7,4 +7,4 @@ extra-deps:
 - snap-1.0.0.1
 - heist-1.0.1.0
 - map-syntax-0.2.0.1
-resolver: lts-7.14
+resolver: lts-8.11
